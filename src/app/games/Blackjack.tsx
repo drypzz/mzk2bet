@@ -186,28 +186,21 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
     })
     refreshProfile()
 
+    // LÓGICA DE DISTRIBUIÇÃO LIMPA E ALEATÓRIA
     const tempDeck = createDeck()
+    
+    // Distribui cartas alternadamente (simulando um deal real)
+    // 1ª carta Jogador
+    const p1 = tempDeck.pop()!
+    // 1ª carta Dealer (Hole card - escondida)
+    const d1 = tempDeck.pop()!
+    // 2ª carta Jogador
+    const p2 = tempDeck.pop()!
+    // 2ª carta Dealer (Up card - visível)
+    const d2 = tempDeck.pop()!
 
-    // Mão forçada para sempre dar Blackjack ao jogador.
-    // Lembre-se de remover/comentar esta parte após os testes.
-    // const tempPlayerHand = [
-    //   { suit: '♠', value: 'A', numValue: 11 },
-    //   { suit: '♥', value: 'K', numValue: 10 }
-    // ]
-
-    const tempPlayerHand = [tempDeck.pop()!, tempDeck.pop()!]
-
-    const winningStreak = checkWinningStreak()
-    let tempDealerHand: Card[]
-
-    if (winningStreak >= 3) {
-      // console.log(`MODO DIFÍCIL ATIVADO! Sequência de ${winningStreak} vitórias.`)
-      tempDealerHand = getRiggedDealerHand(tempDeck)
-    } else {
-      const holeCard = tempDeck.pop()!
-      const upCard = tempDeck.pop()!
-      tempDealerHand = [holeCard, upCard]
-    }
+    const tempPlayerHand = [p1, p2]
+    const tempDealerHand = [d1, d2]
 
     setDeck(tempDeck)
     setPlayerHand(tempPlayerHand)
@@ -215,40 +208,10 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
     setGameState('playing')
     setWarningMessage('')
 
+    // Se o jogador já tiver 21, verifica se é blackjack
     if (calculateScore(tempPlayerHand) === 21) {
       stand(tempPlayerHand)
     }
-  }
-
-  const checkWinningStreak = (): number => {
-    if (!profile) return 0
-
-    const userHistory = LocalStorage.getGameHistoryForUser(profile.id, 5)
-    let streak = 0
-    for (const game of userHistory) {
-      if (game.game_type === 'blackjack' && game.payout_amount > game.bet_amount) {
-        streak++
-      } else {
-        break
-      }
-    }
-    return streak
-  }
-
-  const getRiggedDealerHand = (deck: Card[]): Card[] => {
-    for (let i = 0; i < deck.length - 1; i++) {
-      for (let j = i + 1; j < deck.length; j++) {
-        const hand = [deck[i], deck[j]]
-        const score = calculateScore(hand)
-        if (score >= 19 && score <= 21) {
-          const card1 = deck.splice(j, 1)[0]
-          const card2 = deck.splice(i, 1)[0]
-          // console.log(`Mão do Dealer manipulada para ter ${score} pontos.`)
-          return [card2, card1]
-        }
-      }
-    }
-    return [deck.pop()!, deck.pop()!]
   }
 
   const hit = () => {
@@ -273,6 +236,11 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
     setTimeout(() => {
       let newDealerHand = [...dealerHand]
       const currentDeck = [...deck]
+      
+      // Lógica do Dealer padrão de cassino:
+      // O dealer DEVE bater se tiver menos de 17.
+      // O dealer DEVE parar se tiver 17 ou mais.
+      // Isso não é "roubo", é a regra do jogo.
       const dealerPlay = () => {
         const dealerScore = calculateScore(newDealerHand)
         if (dealerScore < 17 && currentDeck.length > 0) {
@@ -380,6 +348,8 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
         balance_after: profile.balance + payout,
       })
       refreshProfile()
+    } else if (profile) {
+      // Registrar derrota
       await LocalStorage.addGameHistory({
         user_id: profile.id,
         game_type: 'blackjack',
@@ -388,7 +358,6 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
         game_data: { playerHand: pHand, dealerHand: dHand, playerScore, dealerScore },
         balance_after: profile.balance,
       })
-      refreshProfile()
       refreshProfile()
     }
   }
@@ -416,7 +385,7 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
       return
     }
     if (gameState === 'playing') {
-      setDealerVisibleScore(dealerHand[1].numValue)
+      setDealerVisibleScore(dealerHand[0].numValue)
     } else {
       setDealerVisibleScore(calculateScore(dealerHand))
     }

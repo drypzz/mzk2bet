@@ -95,7 +95,7 @@ const ConfirmationModal = ({ count, betAmount, total, onConfirm, onCancel }: { c
 
 const Reel = ({ finalSymbolId, isSpinning }: { finalSymbolId: string; isSpinning: boolean }) => {
     return (
-        <div className='h-24 sm:h-32 overflow-hidden bg-slate-900/80 rounded-xl flex items-center justify-center relative border-2 border-slate-700 shadow-inner bg-gradient-to-b from-slate-900 to-slate-800 sm:rounded-2xl border-2 sm:border-4 border-yellow-400 shadow-[inset_0_0_20px_rgba(255,255,255,0.2),0_0_25px_rgba(255,215,0,0.5)] flex items-center justify-center'>
+        <div className='h-24 sm:h-32 overflow-hidden bg-slate-900/80 rounded-xl flex items-center justify-center relative border-2 border-slate-700 shadow-inner bg-gradient-to-b from-slate-900 to-slate-800 sm:rounded-2xl border-2 sm:border-4 border-yellow-400 shadow-[inset_0_0_20px_rgba(255,255,255,0.2),0_0_25px_rgba(255,215,0,0.5)] flex justify-center'>
             <motion.div
                 animate={{ y: isSpinning ? ['0%', `-${SYMBOLS.length * 15}%`] : '0%' }}
                 transition={isSpinning ? { duration: 0.5, repeat: Infinity, ease: 'linear' } : { duration: 0.5, ease: [0.25, 1, 0.5, 1] }} 
@@ -126,6 +126,24 @@ const Reel = ({ finalSymbolId, isSpinning }: { finalSymbolId: string; isSpinning
                     </motion.div>
                 )}
             </AnimatePresence>
+        </div>
+    )
+}
+
+const Paytable = () => {
+    return (
+        <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mt-4 px-2">
+            {SYMBOLS.map((symbol) => {
+                const multiplier = PAYOUTS[symbol.id as keyof typeof PAYOUTS]
+                return (
+                    <div key={symbol.id} className="flex items-center gap-2 bg-slate-900/60 px-3 py-1.5 rounded-lg border border-slate-600/50 shadow-sm" title={`Combinação de 3 ${symbol.id} paga ${multiplier}x`}>
+                        <symbol.icon className={`w-5 h-5 ${symbol.color}`} />
+                        <span className="text-slate-200 font-bold text-sm">
+                            {multiplier}x
+                        </span>
+                    </div>
+                )
+            })}
         </div>
     )
 }
@@ -383,6 +401,7 @@ export const SlotMachine = ({ onBack }: { onBack: () => void }) => {
               <Sparkles className="w-6 h-6 sm:w-8 sm:h-8" /> Slot Machine
             </h1>
              <p className='text-slate-400 text-sm sm:text-base'>Combine 3 símbolos para ganhar!</p>
+             <Paytable />
           </div>
 
           <div className='bg-gradient-to-br from-slate-900/50 to-slate-800/50 rounded-xl p-4 sm:p-6 md:p-8 border-2 border-amber-500/30 shadow-lg relative'>
